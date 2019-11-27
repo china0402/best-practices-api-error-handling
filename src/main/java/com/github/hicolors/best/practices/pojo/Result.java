@@ -67,7 +67,7 @@ public class Result<T> implements Serializable {
     @AllArgsConstructor
     @NoArgsConstructor
     @ApiModel("统一 Response 返回值中错误信息的模型")
-    class Error {
+    public class Error {
 
         @ApiModelProperty(name = "错误项", notes = "错误的具体项")
         private String name;

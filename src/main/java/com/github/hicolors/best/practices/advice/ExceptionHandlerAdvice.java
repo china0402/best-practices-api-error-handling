@@ -4,6 +4,7 @@ import com.github.hicolors.best.practices.exception.ExtensionException;
 import com.github.hicolors.best.practices.pojo.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -42,17 +44,20 @@ public class ExceptionHandlerAdvice {
      * @return 异常处理结果
      */
     @ExceptionHandler(value = ExtensionException.class)
+    @SuppressWarnings("unchecked")
     public Result extensionException(ExtensionException exception,
                                      HttpServletRequest request, HttpServletResponse response) {
         log.warn("请求发生了预期异常，出错的 url [{}]，出错的描述为 [{}]",
                 request.getRequestURL().toString(), exception.getMessage());
         Result result = new Result();
-        result.setDomain(domain);
+        result.setDomain(StringUtils.isEmpty(exception.getDomain()) ? domain : exception.getDomain());
         result.setCode(exception.getCode());
         result.setMsg(exception.getMessage());
         Object data = exception.getData();
-        if (Objects.nonNull(data)) {
-            // todo 策略调整
+        if (Objects.nonNull(data) && data instanceof List) {
+            if (((List) data).size() > 0 && (((List) data).get(0) instanceof Result.Error)) {
+                result.setErrors((List<Result.Error>) data);
+            }
         }
         return result;
     }
